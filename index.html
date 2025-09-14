@@ -142,7 +142,7 @@
             <div id="space-1" class="space bg-sky-100">Câu hỏi</div>
             <div id="space-2" class="space bg-amber-100">Hành động</div>
             <div id="space-3" class="space bg-sky-100">Câu hỏi</div>
-            <div id="space-4" class="space corner bg-rose-200">Mất lượt</div>
+            <div id="space-4" class="space corner bg-rose-200">Tạm dừng</div>
             <div id="space-5" class="space bg-sky-100">Câu hỏi</div>
             <div id="space-6" class="space bg-violet-100">Phần thưởng</div>
             <div id="space-7" class="space corner bg-yellow-200">Vòng quay may mắn (Thêm lượt)</div>
@@ -150,7 +150,7 @@
             <div id="space-9" class="space bg-amber-100">Hành động</div>
             <div id="space-10" class="space bg-sky-100">Câu hỏi</div>
             <div id="space-11" class="space bg-amber-100">Hành động</div>
-            <div id="space-12" class="space bg-sky-100">Câu hỏi</div>
+            <div id="space-12" class="space bg-sky-100">Câu hỏi về đích</div>
             
             <!-- Khu vực trung tâm -->
             <div class="center-area flex flex-col items-center justify-between p-4 md:p-6">
@@ -225,18 +225,18 @@
             // Nội dung cho 13 ô (từ 0 đến 12)
             const boardSpacesContent = [
                 { type: 'start', title: 'Bắt đầu!', message: 'Chúc mừng bạn đã về vị trí xuất phát. Giữ nguyên vị trí.' },
-                { type: 'question', title: 'Câu hỏi thảo luận', message: 'Bạn mong đợi điều gì nhất từ chương trình này?' },
-                { type: 'action', title: 'Hành động vui!', message: 'Cả đội cùng vỗ tay 5 lần để tăng năng lượng!' },
+                { type: 'question', title: 'Câu hỏi thảo luận', message: 'Điều gì đã thôi thúc bạn tham gia chương trình này?' },
+                { type: 'action', title: 'Thử thách', message: 'Thử thách siêu dễ: Cả đội cùng vỗ tay liên tục trong 5 giây!' },
                 { type: 'question', title: 'Câu hỏi thảo luận', message: 'Kỹ năng mà bạn muốn phát triển nhất sau chương trình này là gì?' },
-                { type: 'penalty', title: 'Ôi không!', message: 'Bạn bị mất lượt ở vòng tiếp theo. Hãy nghỉ ngơi nhé!' },
+                { type: 'penalty', title: 'Đóng băng!', message: 'Bạn nghỉ chân và đội tiếp theo mất lượt!' },
                 { type: 'question', title: 'Câu hỏi thảo luận', message: 'Bạn thích học theo phương pháp nào nhất (thảo luận nhóm, thực hành, nghe giảng,...)?' },
                 { type: 'reward', title: 'Phần thưởng!', message: 'Tuyệt vời! Đội bạn được tiến thêm 2 ô.' },
-                { type: 'special', title: 'Thêm lượt!', message: 'May mắn đã mỉm cười, bạn được tung xúc xắc thêm một lần nữa!' },
+                { type: 'special', title: 'Tăng tốc!', message: 'Bạn được tung xúc xắc thêm một lần nữa!' },
                 { type: 'question', title: 'Câu hỏi thảo luận', message: 'Điều gì có thể sẽ là thách thức đối với bạn khi bắt đầu chương trình này?' },
-                { type: 'action', title: 'Hành động vui!', message: 'Bắt tay 3 người trong phòng hoặc chụp 1 kiểu ảnh selfie với đội của bạn' },
-                { type: 'question', title: 'Câu hỏi thảo luận', message: 'Điều gì đã thôi thúc bạn tham gia khóa học này?' },
-                { type: 'action', title: 'Hành động vui!', message: 'Cả đội cùng nhau squat 5 cái để rèn luyện sức khỏe!' },
-                { type: 'question', title: 'Câu hỏi thảo luận', message: 'Một điều mà bạn tự tin sẽ giúp bạn hoàn thành tốt chương trình này?' },
+                { type: 'action', title: 'Thử thách', message: 'Thử thách kết nối: Bắt tay 3 người trong phòng hoặc chụp 1 kiểu ảnh selfie với đội của bạn' },
+                { type: 'question', title: 'Câu hỏi thảo luận', message: '3 điều mà bạn kỳ vọng bản thân sẽ tiến bộ sau khi tham gia chương trình này?' },
+                { type: 'action', title: 'Thử thách', message: 'Thử thách thể lực: Cả đội cùng squat 5 cái!' },
+                { type: 'question', title: 'Câu hỏi cuối cùng', message: 'Một điều mà bạn tự tin sẽ giúp bạn hoàn thành tốt chương trình này?' },
             ];
             
             const totalSpaces = 13;
@@ -335,14 +335,16 @@
             function nextTurn() {
                 if (extraTurn) {
                     // Nếu có thêm lượt, không chuyển người chơi
-                    showModal('Thêm lượt!', 'Bạn được tung xúc xắc một lần nữa.');
+                    
+                    extraTurn = false; 
                     rollDiceBtn.disabled = false;
+                    diceResultEl.textContent = 'Bạn có thêm lượt!';
                     return;
                 }
 
                 if (skipNextTurn) {
                     // Bỏ qua lượt của người chơi tiếp theo
-                    showModal('Mất lượt!', `Đội ${teams[(currentPlayerIndex + 1) % teams.length].name} bị mất lượt ở vòng này!`);
+                    showModal('Đóng băng!', `Đội ${teams[(currentPlayerIndex + 1) % teams.length].name} bị mất lượt ở vòng này!`);
                     currentPlayerIndex = (currentPlayerIndex + 2) % teams.length;
                     skipNextTurn = false; // Reset cờ
                 } else {
@@ -382,5 +384,6 @@
     </script>
 </body>
 </html>
+
 
 
