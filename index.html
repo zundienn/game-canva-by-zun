@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cờ Tỷ Phú Lớp Học</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            touch-action: manipulation;
+        }
+        /* Cấu trúc bàn cờ */
+        .game-board {
+            display: grid;
+            grid-template-columns: 120px repeat(4, 1fr) 120px;
+            grid-template-rows: 120px repeat(2, 1fr) 120px;
+            gap: 8px;
+            width: 100%;
+            max-width: 800px;
+            margin: auto;
+        }
+        .space {
+            border: 2px solid #334155;
+            border-radius: 8px;
+            padding: 8px;
+            text-align: center;
+            font-weight: 500;
+            font-size: 0.8rem;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #f1f5f9;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            min-height: 80px;
+        }
+        .corner {
+            font-weight: bold;
+        }
+        /* Vị trí các ô trên bàn cờ */
+        #space-0 { grid-area: 4 / 1; }
+        #space-1 { grid-area: 4 / 2; }
+        #space-2 { grid-area: 4 / 3; }
+        #space-3 { grid-area: 4 / 4; }
+        #space-4 { grid-area: 4 / 5; }
+        #space-5 { grid-area: 3 / 5; }
+        #space-6 { grid-area: 2 / 5; }
+        #space-7 { grid-area: 1 / 5; }
+        #space-8 { grid-area: 1 / 4; }
+        #space-9 { grid-area: 1 / 3; }
+        #space-10 { grid-area: 1 / 2; }
+        #space-11 { grid-area: 2 / 1; }
+        #space-12 { grid-area: 3 / 1; }
+        
+        .center-area {
+            grid-area: 2 / 2 / 4 / 5;
+            background-color: #cbd5e1;
+            border-radius: 12px;
+        }
+        /* Quân cờ */
+        .token {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid white;
+            transition: all 0.5s ease-in-out;
+            box-shadow: 0 0 8px rgba(0,0,0,0.3);
+        }
+        .token-1 { background-color: #ef4444; top: 10px; left: 10px; z-index: 1; }
+        .token-2 { background-color: #3b82f6; top: 10px; right: 10px; z-index: 2; }
+        .token-3 { background-color: #22c55e; bottom: 10px; left: 10px; z-index: 3; }
+        .token-4 { background-color: #8b5cf6; bottom: 10px; right: 10px; z-index: 4; }
+
+
+        /* Giao diện xúc xắc */
+        #dice {
+            width: 60px;
+            height: 60px;
+            perspective: 300px;
+        }
+        #dice-cube {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 1s;
+        }
+        .face {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: #f8fafc;
+            border: 2px solid #94a3b8;
+            border-radius: 4px;
+            font-size: 30px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #1e293b;
+        }
+        .front  { transform: translateZ(30px); }
+        .back   { transform: rotateY(180deg) translateZ(30px); }
+        .right  { transform: rotateY(90deg) translateZ(30px); }
+        .left   { transform: rotateY(-90deg) translateZ(30px); }
+        .top    { transform: rotateX(90deg) translateZ(30px); }
+        .bottom { transform: rotateX(-90deg) translateZ(30px); }
+
+        /* Modal thông báo */
+        #modal {
+            transition: opacity 0.3s ease;
+        }
+        .modal-content {
+            animation: slide-up 0.4s ease-out;
+        }
+        @keyframes slide-up {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-200 text-slate-800 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl mx-auto">
+        <h1 class="text-3xl md:text-4xl font-bold text-center mb-4 text-slate-700">Board Game: Kỳ Vọng Khóa Học</h1>
+        
+        <div class="game-board">
+            <!-- Các ô trên bàn cờ -->
+            <div id="space-0" class="space corner bg-emerald-200">BẮT ĐẦU</div>
+            <div id="space-1" class="space bg-sky-100">Câu hỏi</div>
+            <div id="space-2" class="space bg-amber-100">Hành động</div>
+            <div id="space-3" class="space bg-sky-100">Câu hỏi</div>
+            <div id="space-4" class="space corner bg-rose-200">Mất lượt</div>
+            <div id="space-5" class="space bg-sky-100">Câu hỏi</div>
+            <div id="space-6" class="space bg-violet-100">Phần thưởng</div>
+            <div id="space-7" class="space corner bg-yellow-200">Vòng quay may mắn (Thêm lượt)</div>
+            <div id="space-8" class="space bg-sky-100">Câu hỏi</div>
+            <div id="space-9" class="space bg-amber-100">Hành động</div>
+            <div id="space-10" class="space bg-sky-100">Câu hỏi</div>
+            <div id="space-11" class="space bg-amber-100">Hành động</div>
+            <div id="space-12" class="space bg-sky-100">Câu hỏi</div>
+            
+            <!-- Khu vực trung tâm -->
+            <div class="center-area flex flex-col items-center justify-between p-4 md:p-6">
+                <!-- Thông tin đội -->
+                <div id="turn-info" class="w-full text-center">
+                    <h2 class="text-xl md:text-2xl font-bold mb-2">Đến lượt:</h2>
+                    <div id="current-player-display" class="w-full h-12 rounded-lg flex items-center justify-center text-white text-lg font-bold shadow-lg transition-colors duration-300">
+                        Đội 1
+                    </div>
+                </div>
+
+                <!-- Xúc xắc -->
+                <div class="flex flex-col items-center">
+                     <div id="dice">
+                        <div id="dice-cube">
+                            <div class="face front">1</div>
+                            <div class="face back">6</div>
+                            <div class="face right">4</div>
+                            <div class="face left">3</div>
+                            <div class="face top">2</div>
+                            <div class="face bottom">5</div>
+                        </div>
+                    </div>
+                    <p id="dice-result" class="mt-2 h-6 font-bold text-lg"></p>
+                </div>
+
+                <!-- Nút điều khiển -->
+                <button id="roll-dice-btn" class="w-full max-w-xs bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-95 disabled:bg-slate-400 disabled:cursor-not-allowed">
+                    Tung xúc xắc
+                </button>
+            </div>
+        </div>
+        
+        <!-- Hiển thị đội -->
+        <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div class="p-3 rounded-lg shadow-md bg-red-100 border-2 border-red-400">
+                <h3 class="font-bold text-red-700">RED TEAM</h3>
+            </div>
+            <div class="p-3 rounded-lg shadow-md bg-blue-100 border-2 border-blue-400">
+                <h3 class="font-bold text-blue-700">BLUE TEAM</h3>
+            </div>
+            <div class="p-3 rounded-lg shadow-md bg-green-100 border-2 border-green-400">
+                <h3 class="font-bold text-green-700">GREEN TEAM</h3>
+            </div>
+            <div class="p-3 rounded-lg shadow-md bg-purple-100 border-2 border-purple-400">
+                <h3 class="font-bold text-purple-700">PURPLE TEAM</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal thông báo -->
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 hidden">
+        <div class="modal-content bg-white rounded-xl shadow-2xl p-6 md:p-8 max-w-md w-full text-center">
+            <h2 id="modal-title" class="text-2xl font-bold mb-4 text-slate-800"></h2>
+            <p id="modal-body" class="text-slate-600 mb-6 text-lg"></p>
+            <button id="modal-close-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition-transform transform hover:scale-105">
+                OK, đi tiếp thôi!
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- CÀI ĐẶT GAME ---
+            const teams = [
+                { id: 1, name: 'Red team', position: 0, color: 'bg-red-500', displayColor: 'bg-red-500' },
+                { id: 2, name: 'Blue team', position: 0, color: 'bg-blue-500', displayColor: 'bg-blue-500' },
+                { id: 3, name: 'Green team', position: 0, color: 'bg-green-500', displayColor: 'bg-green-500' },
+                { id: 4, name: 'Purple team', position: 0, color: 'bg-purple-500', displayColor: 'bg-purple-500' },
+            ];
+
+            // Nội dung cho 13 ô (từ 0 đến 12)
+            const boardSpacesContent = [
+                { type: 'start', title: 'Bắt đầu!', message: 'Chúc mừng bạn đã về vị trí xuất phát. Giữ nguyên vị trí.' },
+                { type: 'question', title: 'Câu hỏi thảo luận', message: 'Bạn mong đợi điều gì nhất từ chương trình này?' },
+                { type: 'action', title: 'Hành động vui!', message: 'Cả đội cùng vỗ tay 5 lần để tăng năng lượng!' },
+                { type: 'question', title: 'Câu hỏi thảo luận', message: 'Kỹ năng mà bạn muốn phát triển nhất sau chương trình này là gì?' },
+                { type: 'penalty', title: 'Ôi không!', message: 'Bạn bị mất lượt ở vòng tiếp theo. Hãy nghỉ ngơi nhé!' },
+                { type: 'question', title: 'Câu hỏi thảo luận', message: 'Bạn thích học theo phương pháp nào nhất (thảo luận nhóm, thực hành, nghe giảng,...)?' },
+                { type: 'reward', title: 'Phần thưởng!', message: 'Tuyệt vời! Đội bạn được tiến thêm 2 ô.' },
+                { type: 'special', title: 'Thêm lượt!', message: 'May mắn đã mỉm cười, bạn được tung xúc xắc thêm một lần nữa!' },
+                { type: 'question', title: 'Câu hỏi thảo luận', message: 'Điều gì có thể sẽ là thách thức đối với bạn khi bắt đầu chương trình này?' },
+                { type: 'action', title: 'Hành động vui!', message: 'Bắt tay 3 người trong phòng hoặc chụp 1 kiểu ảnh selfie với đội của bạn' },
+                { type: 'question', title: 'Câu hỏi thảo luận', message: 'Điều gì đã thôi thúc bạn tham gia khóa học này?' },
+                { type: 'action', title: 'Hành động vui!', message: 'Cả đội cùng nhau squat 5 cái để rèn luyện sức khỏe!' },
+                { type: 'question', title: 'Câu hỏi thảo luận', message: 'Một điều mà bạn tự tin sẽ giúp bạn hoàn thành tốt chương trình này?' },
+            ];
+            
+            const totalSpaces = 13;
+            let currentPlayerIndex = 0;
+            let skipNextTurn = false; // Cờ cho việc mất lượt
+            let extraTurn = false; // Cờ cho việc thêm lượt
+            
+            // --- LẤY CÁC PHẦN TỬ DOM ---
+            const rollDiceBtn = document.getElementById('roll-dice-btn');
+            const diceCube = document.getElementById('dice-cube');
+            const diceResultEl = document.getElementById('dice-result');
+            const currentPlayerDisplay = document.getElementById('current-player-display');
+            const modal = document.getElementById('modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body');
+            const modalCloseBtn = document.getElementById('modal-close-btn');
+
+            // --- HÀM KHỞI TẠO GAME ---
+            function initGame() {
+                // Tạo quân cờ cho các đội
+                const startSpace = document.getElementById('space-0');
+                teams.forEach(team => {
+                    const token = document.createElement('div');
+                    token.id = `token-${team.id}`;
+                    token.className = `token token-${team.id} ${team.color}`;
+                    startSpace.appendChild(token);
+                });
+                updateTurnDisplay();
+            }
+
+            // --- HÀM XỬ LÝ GAME ---
+            function rollDice() {
+                rollDiceBtn.disabled = true;
+                diceResultEl.textContent = '...';
+
+                const result = Math.floor(Math.random() * 6) + 1;
+
+                // Animation cho xúc xắc
+                const rotations = {
+                    1: 'rotateX(0deg) rotateY(0deg)',
+                    2: 'rotateX(-90deg) rotateY(0deg)',
+                    3: 'rotateX(0deg) rotateY(90deg)',
+                    4: 'rotateX(0deg) rotateY(-90deg)',
+                    5: 'rotateX(90deg) rotateY(0deg)',
+                    6: 'rotateX(0deg) rotateY(180deg)',
+                };
+                // Quay ngẫu nhiên trước khi hiện kết quả
+                const randomX = (Math.floor(Math.random() * 4) + 1) * 360;
+                const randomY = (Math.floor(Math.random() * 4) + 1) * 360;
+                diceCube.style.transform = `rotateX(${randomX}deg) rotateY(${randomY}deg)`;
+
+                setTimeout(() => {
+                    diceCube.style.transform = rotations[result];
+                    diceResultEl.textContent = `Ra ${result}!`;
+                    setTimeout(() => movePlayer(result), 500);
+                }, 1000);
+            }
+
+            function movePlayer(steps) {
+                const team = teams[currentPlayerIndex];
+                team.position = (team.position + steps) % totalSpaces;
+                
+                // Cập nhật vị trí quân cờ trên UI
+                const token = document.getElementById(`token-${team.id}`);
+                const newSpace = document.getElementById(`space-${team.position}`);
+                newSpace.appendChild(token);
+
+                setTimeout(() => handleSpaceAction(team.position), 300);
+            }
+
+            function handleSpaceAction(position) {
+                const spaceContent = boardSpacesContent[position];
+                showModal(spaceContent.title, spaceContent.message);
+
+                extraTurn = false; // Reset cờ thêm lượt
+                skipNextTurn = false; // Reset cờ mất lượt
+
+                switch (spaceContent.type) {
+                    case 'penalty':
+                        skipNextTurn = true;
+                        break;
+                    case 'reward':
+                        // Tự động di chuyển thêm 2 ô
+                        setTimeout(() => {
+                           modal.classList.add('hidden');
+                           movePlayer(2);
+                        }, 1500); 
+                        // Dùng return để không chuyển lượt ngay, mà chờ di chuyển xong
+                        return; 
+                    case 'special':
+                        extraTurn = true;
+                        break;
+                }
+            }
+            
+            function nextTurn() {
+                if (extraTurn) {
+                    // Nếu có thêm lượt, không chuyển người chơi
+                    showModal('Thêm lượt!', 'Bạn được tung xúc xắc một lần nữa.');
+                    rollDiceBtn.disabled = false;
+                    return;
+                }
+
+                if (skipNextTurn) {
+                    // Bỏ qua lượt của người chơi tiếp theo
+                    showModal('Mất lượt!', `Đội ${teams[(currentPlayerIndex + 1) % teams.length].name} bị mất lượt ở vòng này!`);
+                    currentPlayerIndex = (currentPlayerIndex + 2) % teams.length;
+                    skipNextTurn = false; // Reset cờ
+                } else {
+                    currentPlayerIndex = (currentPlayerIndex + 1) % teams.length;
+                }
+
+                updateTurnDisplay();
+                rollDiceBtn.disabled = false;
+            }
+
+            // --- HÀM CẬP NHẬT GIAO DIỆN ---
+            function updateTurnDisplay() {
+                const team = teams[currentPlayerIndex];
+                currentPlayerDisplay.textContent = team.name;
+                // Xóa các class màu cũ
+                currentPlayerDisplay.classList.remove('bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-purple-500');
+                // Thêm class màu mới
+                currentPlayerDisplay.classList.add(team.displayColor);
+            }
+
+            function showModal(title, body) {
+                modalTitle.textContent = title;
+                modalBody.textContent = body;
+                modal.classList.remove('hidden');
+            }
+
+            // --- GẮN SỰ KIỆN ---
+            rollDiceBtn.addEventListener('click', rollDice);
+            modalCloseBtn.addEventListener('click', () => {
+                modal.classList.add('hidden');
+                nextTurn();
+            });
+
+            // --- BẮT ĐẦU GAME ---
+            initGame();
+        });
+    </script>
+</body>
+</html>
+
